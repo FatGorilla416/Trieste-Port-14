@@ -2,11 +2,13 @@ using Content.Server.Atmos.EntitySystems;
 using Content.Server.Atmos.Piping.Components;
 using Content.Server.Destructible;
 using Content.Server.NodeContainer.Nodes;
+using Content.Server.Power.Components;
 using Content.Server.Radio.EntitySystems;
 using Content.Server.Temperature.Components;
 using Content.Shared._TP.Power.Generation;
 using Content.Shared.Atmos;
 using Content.Shared.DoAfter;
+using Content.Shared.Electrocution;
 using Content.Shared.Examine;
 using Content.Shared.Explosion.Components;
 using Content.Shared.NodeContainer;
@@ -21,18 +23,18 @@ namespace Content.Server._TP.Power.Generation;
 ///     This is similar to the TEG coolant loop, absorbing heat and transferring it to pipe gas.
 ///     Created by Cookie (Father Cheese) for Trieste Port 14.
 /// </summary>
-public sealed class StormArraySystem : EntitySystem
+public sealed partial class StormArraySystem : EntitySystem
 {
     // Pipe names from the Storm Array entity.
     private const string NodeNameInlet = "inlet";
     private const string NodeNameOutlet = "outlet";
 
-    [Dependency] private readonly SharedAppearanceSystem _appearance = default!;
-    [Dependency] private readonly AtmosphereSystem _atmosphere = default!;
-    [Dependency] private readonly DestructibleSystem _destructible = default!;
-    [Dependency] private readonly SharedDoAfterSystem _doAfter = default!;
-    [Dependency] private readonly SharedPopupSystem _popup = default!;
-    [Dependency] private readonly RadioSystem _radio = default!;
+    [Dependency] private SharedAppearanceSystem _appearance = default!;
+    [Dependency] private AtmosphereSystem _atmosphere = default!;
+    [Dependency] private DestructibleSystem _destructible = default!;
+    [Dependency] private SharedDoAfterSystem _doAfter = default!;
+    [Dependency] private SharedPopupSystem _popup = default!;
+    [Dependency] private RadioSystem _radio = default!;
 
     private EntityQuery<NodeContainerComponent> _nodeContainerQuery;
 
@@ -99,6 +101,15 @@ public sealed class StormArraySystem : EntitySystem
 
         _appearance.SetData(ent.Owner, StormArrayVisuals.Idle, false);
         _appearance.SetData(ent.Owner, StormArrayVisuals.Active, true);
+        if (TryComp<PowerSupplierComponent>(ent, out var powerSupp))
+        {
+            powerSupp.Enabled = true;
+        }
+
+        if (TryComp<ElectrifiedComponent>(ent, out var electrified))
+        {
+            electrified.Enabled = true;
+        }
     }
 
     private void OnExamined(Entity<StormArrayComponent> ent, ref ExaminedEvent args)
